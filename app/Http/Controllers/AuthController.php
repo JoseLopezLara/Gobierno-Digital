@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -48,12 +50,30 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
+    // public function logout()
+    // {
+    //     auth()->logout();
+
+    //     return response()->json(['message' => 'Successfully logged out']);
+    // }
     public function logout()
-    {
+{
+    try {
+        JWTAuth::parseToken()->invalidate(true); // Force invalidate
         auth()->logout();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json([
+            'message' => 'Successfully logged out',
+            'status' => 200
+        ]);
+    } catch (JWTException $e) {
+        return response()->json([
+            'message' => 'Failed to logout, please try again',
+            'status' => 500
+        ], 500);
     }
+}
+
 
     /**
      * Refresh a token.
