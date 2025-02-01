@@ -4,220 +4,166 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Traits\UserTrait;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
+    use UserTrait;
+
+    /**
+     * Muestra listado de todos los usuarios
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index()
     {
         $users = User::all();
-
-        $data = [
+        return response()->json([
             'users' => $users,
             'status' => 200
-        ];
-
-        return response()->json($data, 200);
+        ]);
     }
 
+    /**
+     * Crea un nuevo usuario
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
-
-        if (!auth()->user()->hasRole('admin')) {
-            return response()->json(['error' => 'Solo los administradores pueden realizar está acción'], 403);
+        if ($adminCheck = $this->checkAdminPermission()) {
+            return $adminCheck;
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|max:191',
-            'email' => 'required|email|unique:users|max:191',
-            'password' => 'required|max:191',
-        ]);
+        $validator = Validator::make($request->all(), $this->getUserValidationRules());
 
         if ($validator->fails()) {
-            $data = [
-                'message' => 'Error en la validación de los datos',
-                'errors' => $validator->errors(),
-                'status' => 400
-            ];
-            return response()->json($data, 400);
+            return $this->validationErrorResponse($validator->errors());
         }
 
-        // Creo el usario y lo agrego al rol de tipo usuario
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password
-        ]);
-
+        // Crear usuario y asignar rol
+        $user = User::create($request->only(['name', 'email', 'password']));
         $userRole = Role::where('slug', 'user')->first();
         $user->roles()->attach($userRole->id);
 
-
-
-        if (!$user) {
-            $data = [
-                'message' => 'Error al crear el usario',
-                'status' => 500
-            ];
-            return response()->json($data, 500);
-        }
-
-        $data = [
+        return response()->json([
+            'message' => 'Usuario creado exitosamente',
             'user' => $user,
             'status' => 201
-        ];
-
-        return response()->json($data, 201);
-
+        ], 201);
     }
 
+    /**
+     * Muestra un usuario específico
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show($id)
     {
         $user = User::find($id);
 
         if (!$user) {
-            $data = [
-                'message' => 'Usuraio no encontrado',
-                'status' => 404
-            ];
-            return response()->json($data, 404);
+            return $this->userNotFoundResponse();
         }
 
-        $data = [
+        return response()->json([
             'user' => $user,
             'status' => 200
-        ];
-
-        return response()->json($data, 200);
+        ]);
     }
 
+    /**
+     * Actualiza un usuario
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(Request $request, $id)
     {
-
-        if (!auth()->user()->hasRole('admin')) {
-            return response()->json(['error' => 'Solo los administradores pueden realizar está acción'], 403);
+        if ($adminCheck = $this->checkAdminPermission()) {
+            return $adminCheck;
         }
 
         $user = User::find($id);
 
         if (!$user) {
-            $data = [
-                'message' => 'Usuario no encontrado',
-                'status' => 404
-            ];
-            return response()->json($data, 404);
+            return $this->userNotFoundResponse();
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|max:191',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|max:191',
-        ]);
+        $validator = Validator::make($request->all(), $this->getUserValidationRules());
 
         if ($validator->fails()) {
-            $data = [
-                'message' => 'Error en la validación de los datos',
-                'errors' => $validator->errors(),
-                'status' => 400
-            ];
-            return response()->json($data, 400);
+            return $this->validationErrorResponse($validator->errors());
         }
 
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = $request->password;
-
+        $user->fill($request->only(['name', 'email', 'password']));
         $user->save();
 
-        $data = [
-            'message' => 'Usuario actualizado',
+        return response()->json([
+            'message' => 'Usuario actualizado exitosamente',
             'user' => $user,
             'status' => 200
-        ];
-
-        return response()->json($data, status: 200);
-
+        ]);
     }
 
+    /**
+     * Actualiza parcialmente un usuario
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function updatePartial(Request $request, $id)
     {
-        if (!auth()->user()->hasRole('admin')) {
-            return response()->json(['error' => 'Solo los administradores pueden realizar está acción'], 403);
-        }
-
-        $user = user::find($id);
-
-        if (!$user) {
-            $data = [
-                'message' => 'Usuario no encontrado',
-                'status' => 404
-            ];
-            return response()->json($data, 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'max:191',
-            'email' => 'email|unique:users|max:191',
-            'password' => 'max:191',
-        ]);
-
-        if ($validator->fails()) {
-            $data = [
-                'message' => 'Error en la validación de los datos',
-                'errors' => $validator->errors(),
-                'status' => 400
-            ];
-            return response()->json($data, 400);
-        }
-
-        if ($request->has('name')) {
-            $user->name = $request->name;
-        }
-
-        if ($request->has('email')) {
-            $user->email = $request->email;
-        }
-
-        if ($request->has('password')) {
-            $user->password = $request->password;
-        }
-
-        $user->save();
-
-        $data = [
-            'message' => 'Usuario actualizado',
-            'user' => $user,
-            'status' => 200
-        ];
-
-        return response()->json($data, 200);
-    }
-
-    public function delete($id)
-    {
-        if (!auth()->user()->hasRole('admin')) {
-            return response()->json(['error' => 'Solo los administradores pueden realizar está acción'], 403);
+        if ($adminCheck = $this->checkAdminPermission()) {
+            return $adminCheck;
         }
 
         $user = User::find($id);
 
         if (!$user) {
-            $data = [
-                'message' => 'Usuario no encontrado',
-                'status' => 404
-            ];
-            return response()->json($data, 404);
+            return $this->userNotFoundResponse();
+        }
+
+        $validator = Validator::make($request->all(), $this->getUserValidationRules(false));
+
+        if ($validator->fails()) {
+            return $this->validationErrorResponse($validator->errors());
+        }
+
+        // Actualizar solo los campos proporcionados
+        $user->fill($request->only(['name', 'email', 'password']));
+        $user->save();
+
+        return response()->json([
+            'message' => 'Usuario actualizado exitosamente',
+            'user' => $user,
+            'status' => 200
+        ]);
+    }
+
+    /**
+     * Elimina un usuario
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function delete($id)
+    {
+        if ($adminCheck = $this->checkAdminPermission()) {
+            return $adminCheck;
+        }
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return $this->userNotFoundResponse();
         }
 
         $user->delete();
 
-        $data = [
-            'message' => 'Usuario eliminado',
+        return response()->json([
+            'message' => 'Usuario eliminado exitosamente',
             'status' => 200
-        ];
-
-        return response()->json($data, 200);
+        ]);
     }
 }

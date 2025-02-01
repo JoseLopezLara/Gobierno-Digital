@@ -7,10 +7,8 @@ use Illuminate\Support\Facades\Route;
 
 // RUTAS QUE PASAN POR EL MIDDLEWARE DE API DE JWT PERO QUE ADEMAS ESTÁN PROTEGIDAS
 Route::group([
-
     'middleware' => ['api', 'auth:api'],
     'prefix' => 'auth'
-
 ], function ($router) {
 
     //  Rutas focalizadas al sistema de autenticación JWT

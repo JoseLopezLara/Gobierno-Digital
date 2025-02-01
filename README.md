@@ -1,66 +1,80 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Aplicante: José López Lara
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Evidencia de funcionamiento
 
-## About Laravel
+[Video mostrando funcionamiento en POSTMAN, mostrando código y hablando de las dificultades](https://youtu.be/WgWapDzJHOQ)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Como correr el proyecto
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. Clonar unsado  ``https://github.com/JoseLopezLara/Gobierno-Digital.git``
+2. Pegar el ``.env`` que envio en el correo
+3. Ejecuta ``composer i``
+4. Ejecuta ``php artisan migrate --seed``
+5. Ejecuta ``php artisan optimize:clear``
+6. Ejecuta ``php artisan serve``
+7. Descargar el ``Prueba Backend.postman_collection.json`` y abrilo desde postman para poder hacer las pruebas.
+8. El usario administrador es:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+    - email: ``andoney.betancourtc@sfa.michoacan.gob.mx``
+    - contraseña: ``password_no_segura``
 
-## Learning Laravel
+9. Los 15 usarios con rol "user" son generados a travez del factory con faker, por lo que el correro es aleatorio y la contrase es ``password_no_segura``
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Estas fueron las buenas practicas que intente aplicar
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+1. Refactorización de `UserController` para mejorar la mantenibilidad.
+2. Implementación de `Code Block` para facilitar el mantenimiento del código.
+3. Simulación de `Laravel Permissions` mediante un `trait` en el modelo `User` para la gestión de autorizaciones.
+4. Creación de `Seeders` con responsabilidades únicas.
+5. Invalidación del token al realizar `logout`.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Configuración del proyecto
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. **Breeze**: Se elige por ser una REST API y ofrecer un modo "Only API" a diferencia de `Jetstream`.
+2. **MySQL**: Seleccionado por requerimiento.
+3. **JWT**: Integración de `tymon/jwt-auth` para la gestión de `JSON Web Tokens`.
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## Proceso cronológico mediante `Features`
 
-## Contributing
+### #1: FJLL-JWTMigration
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- Integración de `tymon/jwt-auth`, configuración del archivo y migración de `Sanctum` a `JWT`.
 
-## Code of Conduct
+### #2: FJLL-MigracionesYSeeders
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- Creación de migraciones para `roles` y la tabla pivote `many-to-many`.
+- Inclusión de la relación en los modelos `User` y `Roles`.
+- Creación de seeders para `roles`, `usuarios` (con `factory` para rol `user`) y un seeder para el administrador.
 
-## Security Vulnerabilities
+### #3: HFJLL-JWT
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- En este punto ya tenía usuarios en la base de datos para probar JWT, pero surgieron problemas debido a que Breeze incorporaba Sanctum por defecto. Habría ahorrado tiempo creando el proyecto sin un starter kit.
+- Solución de errores en `AuthController` relacionados con `middleware`.
+- Eliminación de configuraciones innecesarias de `Sanctum` en `app.bootstrap`.
 
-## License
+### #4: FJLL-CRUD
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Esto fue lo más sencillo y rápido de la prueba.
+- Implementación de `CRUD`.
+- Creación de un `trait` para la autorización, verificando el `slug` del usuario autenticado con el rol `admin`.
+
+### #5: FJLL-ReadmeYComentariosCodigo
+
+- Documentación en `README`.
+- Refactorización final de `UserController` mediante un `trait` debido a que me sobró tiempo y preferí invertirlo en hacer una refactorización profesional y mantenible.
+
+---
+
+## Conclusiones
+
+Mientras trabajaba en el proyecto, encontré un par de errores en los requerimientos. Uno de ellos fue en el tipado de `description`, ya que estaba como `datetime` cuando realmente debería ser `text` nulleable, para permitir más de 255 caracteres. Otro detalle fue el `remember_token`, que estaba definido como `float`, pero según la documentación de Laravel ([Referencia](https://laravel.com/docs/11.x/migrations#column-method-rememberToken)), debe ser `VARCHAR(100)`, ya que de lo contrario podría causar problemas.
+
+Al final, logré completar todo en aproximadamente 6 horas y 30 minutos, incluyendo pruebas. Fue mi primera vez integrando JWT en Laravel; conocía el concepto, pero siempre había usado Sanctum. Algo que me habría ahorrado bastante tiempo habría sido evitar el uso de Breeze, ya que las configuraciones que integraba con Sanctum me impidieron seguir la documentación de JWT de una manera más directa, lo que generó retrasos considerables. A pesar de ello, disfruté mucho el ejercicio.
+
+### Puntos de mejora
+
+Entiendo que este ejercicio buscaba evaluar cómo abordaría la gestión de permisos de manera "manual", pero en un entorno productivo definitivamente usaría `Laravel Permission`, ya que ofrece una alta escalabilidad. Ahora que ya integré JWT por primera vez, si tuviera que repetirlo, evitaría Breeze y estructuraría mejor el código moviendo las funciones del `AuthController` a un patrón basado en servicios, lo que haría que el código fuera mucho más mantenible.
